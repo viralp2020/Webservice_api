@@ -1,3 +1,3 @@
-Flask==2.0.1
-Flask-RESTx==0.7.0
-Flask-HTTPAuth==4.4.0
+Flask==3.0.1
+Flask-RESTx==1.3.0
+Flask-HTTPAuth==4.8.0
