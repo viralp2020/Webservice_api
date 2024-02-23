@@ -1,58 +1,37 @@
-import unittest
 import json
-import app
+import pytest
+from flask import Flask
+from flask.testing import FlaskClient
+from flask_restx import Api, Resource, fields
+from flask_httpauth import HTTPBasicAuth
+from app import app, movies  # Import 'app' from app.py
+# from app import movies  # Import your local database
 
-class TestMoviesAPI(unittest.TestCase):
-    def setUp(self):
-        self.app = app.test_client()
-        self.setup_test_data()
+@pytest.fixture
+def client():
+    app.config['TESTING'] = True
+    app.config['SERVER_NAME'] = 'localhost:5000'  # Adjust the port and host as needed
+    with app.test_client() as client:
+        yield client
 
-    def setup_test_data(self):
-        # Add code to insert test data into the database
-        pass
+def test_get_movies(client):
+    response = client.get('/movies')
+    assert response.status_code == 200
+    assert json.loads(response.data) == movies
 
-    def test_get_movies(self):
-        response = self.app.get('/movies')
-        self.assertEqual(response.status_code, 200)
+def test_get_movie(client):
+    movie_id = 1
+    response = client.get(f'/movies/{movie_id}')
+    assert response.status_code == 200
+    assert json.loads(response.data) == next((m for m in movies if m['id'] == movie_id), None)
 
-    def test_get_movie_by_id(self):
-        # Assuming there's a movie with ID 1 in your test data
-        response = self.app.get('/movies/1')
-        self.assertEqual(response.status_code, 200)
-        movie = json.loads(response.data)
-        self.assertEqual(movie['id'], 1)
+def test_get_nonexistent_movie(client):
+    movie_id = 999
+    response = client.get(f'/movies/{movie_id}')
+    assert response.status_code == 404
+    assert "not found" in response.get_data(as_text=True).lower()
 
-    def test_create_movie(self):
-        new_movie = {'id': 100, 'name': 'Test Movie', 'year': 2022, 'genre': 'Test Genre', 'rating': 5.0}
-        response = self.app.post('/movies', json=new_movie)
-        self.assertEqual(response.status_code, 201)
-
-        # Check if the movie is added to the database
-        response = self.app.get('/movies/100')
-        self.assertEqual(response.status_code, 200)
-        movie = json.loads(response.data)
-        self.assertEqual(movie['name'], 'Test Movie')
-
-    def test_update_movie(self):
-        # Assuming there's a movie with ID 1 in your test data
-        updated_movie = {'name': 'Updated Movie', 'year': 2023, 'genre': 'Updated Genre', 'rating': 4.5}
-        response = self.app.put('/movies/1', json=updated_movie)
-        self.assertEqual(response.status_code, 200)
-
-        # Check if the movie is updated in the database
-        response = self.app.get('/movies/1')
-        self.assertEqual(response.status_code, 200)
-        movie = json.loads(response.data)
-        self.assertEqual(movie['name'], 'Updated Movie')
-
-    def test_delete_movie(self):
-        # Assuming there's a movie with ID 1 in your test data
-        response = self.app.delete('/movies/1')
-        self.assertEqual(response.status_code, 204)
-
-        # Check if the movie is deleted from the database
-        response = self.app.get('/movies/1')
-        self.assertEqual(response.status_code, 404)
+# Add more tests as needed
 
 if __name__ == '__main__':
-    unittest.main()
+    pytest.main()
