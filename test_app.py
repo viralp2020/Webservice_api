@@ -1,6 +1,6 @@
 import unittest
 import json
-import app.py
+import app
 
 class TestMoviesAPI(unittest.TestCase):
     def setUp(self):
