@@ -1,3 +1,4 @@
+from flask.testing import FlaskClient
 from flask import Flask, request
 from flask_restx import Api, Resource, fields
 from flask_httpauth import HTTPBasicAuth
